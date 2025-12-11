@@ -11,7 +11,7 @@ app = FastAPI(
     description="Backend-API for Forecast24 – prediksjon av strømpris neste 24 timer.",
     version="0.1.0",
 )
-
+#hey
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # kan strammes inn til forecast24.no senere
