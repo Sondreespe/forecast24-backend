@@ -3,6 +3,7 @@ from typing import Dict, List
 from fastapi import FastAPI
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+from app.nve_fetcher import fetch_nve_prices
 
 app = FastAPI(
     title="Forecast24 API",
@@ -12,7 +13,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # senere kan vi låse dette til forecast24.no
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +28,11 @@ def health_check():
         "service": "forecast24-backend",
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
+
+@app.get("/spotprices")
+def get_spotprices(area: str = "NO1"):
+    data = fetch_nve_prices(area)
+    return {"area": area, "data": data}
 
 
 @app.get("/forecast")
