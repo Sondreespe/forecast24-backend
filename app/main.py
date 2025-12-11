@@ -1,5 +1,7 @@
+import math
+from typing import Dict, List
 from fastapi import FastAPI
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -37,14 +39,14 @@ def get_forecast() -> Dict:
     now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
     points: List[Dict] = []
 
-    base_price = 80  # 80 øre/kWh som "grunnnivå"
+    base_price = 80  
 
     for i in range(24):
         ts = now + timedelta(hours=i)
 
-        # Enkel "kurve": billig natt, dyr ettermiddag
+        
         hour = ts.hour
-        # lavere pris natt (0–5), høyere morgen/ettermiddag (6–21), litt lavere kveld (22–23)
+        
         fluct = (
             -15 if 0 <= hour <= 5 else
             20 if 6 <= hour <= 9 else
@@ -52,7 +54,7 @@ def get_forecast() -> Dict:
             5
         )
 
-        # litt bølge + variasjon
+        
         wave = 5 * math.sin(i / 3)
         price = base_price + fluct + wave
 
