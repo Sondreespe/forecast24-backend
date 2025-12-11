@@ -33,8 +33,7 @@ def health_check():
 @app.get("/forecast")
 def get_forecast() -> Dict:
     """
-    Dummy-forecast: 24 timer med fiktive priser, så frontenden har noe å jobbe mot.
-    Dette kan senere byttes ut med ekte modell.
+    Dummy-forecast:
     """
     now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
     points: List[Dict] = []
