@@ -28,15 +28,63 @@ def health_check():
 
 
 @app.get("/forecast")
-def get_forecast():
+def get_forecast() -> Dict:
     """
-    Midlertidig dummy-endepunkt for forecast.
-    Senere skal dette hente ekte prediksjoner fra modell/database.
+    Midlertidig dummy-forecast:
+    24 punkter (én per time), med fiktive priser i øre/kWh.
+    Vi lager et litt realistisk døgnmønster: lav natt, høy ettermiddag.
     """
-    return {
-        "area": "NO1",
+    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    points: List[Dict] = []
+
+    base_price = 80  # 80 øre/kWh som "grunnnivå"
+
+    for i in range(24):
+        ts = now + timedelta(hours=i)
+
+        # Enkel "kurve": billig natt, dyr ettermiddag
+        hour = ts.hour
+        # lavere pris natt (0–5), høyere morgen/ettermiddag (6–21), litt lavere kveld (22–23)
+        fluct = (
+            -15 if 0 <= hour <= 5 else
+            20 if 6 <= hour <= 9 else
+            35 if 16 <= hour <= 20 else
+            5
+        )
+
+        # litt bølge + variasjon
+        wave = 5 * math.sin(i / 3)
+        price = base_price + fluct + wave
+
+        points.append(
+            {
+                "timestamp": ts.isoformat() + "Z",
+                "price_ore_per_kwh": round(price, 1),
+                "hour": hour,
+            }
+        )
+
+    prices = [p["price_ore_per_kwh"] for p in points]
+    cheapest = min(points, key=lambda p: p["price_ore_per_kwh"])
+    priciest = max(points, key=lambda p: p["price_ore_per_kwh"])
+
+    summary = {
+        "currency": "NOK",
+        "unit": "øre/kWh",
         "horizon_hours": 24,
-        "status": "placeholder",
-        "message": "Forecast-endepunktet er satt opp, men ingen modell er koblet til enda.",
+        "min_price": min(prices),
+        "max_price": max(prices),
+        "cheapest_hour": cheapest["hour"],
+        "cheapest_timestamp": cheapest["timestamp"],
+        "priciest_hour": priciest["hour"],
+        "priciest_timestamp": priciest["timestamp"],
+    }
+
+    return {
+        "status": "ok",
+        "area": "NO1",
+        "generated_at": now.isoformat() + "Z",
+        "summary": summary,
+        "points": points,
     }
 
