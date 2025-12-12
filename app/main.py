@@ -20,11 +20,10 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://forecast24-frontend.onrender.com",
-        # legg til ditt domene her senere:
-        # "https://dittdomene.no",
-        # "https://www.dittdomene.no",
+        "https://forecast24.no",
+        "https://www.forecast24.no",
     ],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
