@@ -40,6 +40,7 @@ def health_check():
     return {
         "status": "ok",
         "service": "forecast24-backend",
+        "cors_fingerprint": "CORS-TEST-2025-12-12",
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
