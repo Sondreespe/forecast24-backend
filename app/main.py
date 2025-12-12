@@ -1,27 +1,36 @@
 from datetime import datetime, timedelta
 from typing import Dict, List
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from .nve_fetcher import fetch_nve_prices
+from .history_api import router as history_router
+from .db import Base, engine
+from .models import SpotPrice
+from .spot_api import router as spot_router
 
 app = FastAPI(
     title="Forecast24 API",
-    description="Backend-API for Forecast24 – prediksjon av strømpris neste 24 timer.",
+    description="Backend-API for Forecast24",
     version="0.1.0",
 )
-#hey
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # kan strammes inn til forecast24.no senere
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ALT under /api
+app.include_router(history_router, prefix="/api")
+app.include_router(spot_router)
 
-@app.get("/health")
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+
+@app.get("/api/health")
 def health_check():
     return {
         "status": "ok",
@@ -29,22 +38,16 @@ def health_check():
         "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
-
-@app.get("/forecast")
+@app.get("/api/forecast")
 def get_forecast() -> Dict:
-    """
-    Dummy-forecast:
-    """
     now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
     points: List[Dict] = []
 
-    base_price = 0.8  # 0.8 kr/kWh (80 øre)
-
+    base_price = 0.8
     for i in range(24):
         ts = now + timedelta(hours=i)
         hour = ts.hour
 
-        # enkel dagkurve
         if 0 <= hour <= 5:
             fluct = -0.15
         elif 6 <= hour <= 9:
@@ -56,42 +59,32 @@ def get_forecast() -> Dict:
 
         price = base_price + fluct
         points.append(
-            {
-                "timestamp": ts.isoformat() + "Z",
-                "price_nok_per_kwh": round(price, 3),
-                "hour": hour,
-            }
+            {"timestamp": ts.isoformat() + "Z", "price_nok_per_kwh": round(price, 3), "hour": hour}
         )
 
     prices = [p["price_nok_per_kwh"] for p in points]
     cheapest = min(points, key=lambda p: p["price_nok_per_kwh"])
     priciest = max(points, key=lambda p: p["price_nok_per_kwh"])
 
-    summary = {
-        "currency": "NOK",
-        "unit": "kr/kWh",
-        "horizon_hours": 24,
-        "min_price": min(prices),
-        "max_price": max(prices),
-        "cheapest_hour": cheapest["hour"],
-        "cheapest_timestamp": cheapest["timestamp"],
-        "priciest_hour": priciest["hour"],
-        "priciest_timestamp": priciest["timestamp"],
-    }
-
     return {
         "status": "ok",
         "area": "NO1",
         "generated_at": now.isoformat() + "Z",
-        "summary": summary,
+        "summary": {
+            "currency": "NOK",
+            "unit": "kr/kWh",
+            "horizon_hours": 24,
+            "min_price": min(prices),
+            "max_price": max(prices),
+            "cheapest_hour": cheapest["hour"],
+            "cheapest_timestamp": cheapest["timestamp"],
+            "priciest_hour": priciest["hour"],
+            "priciest_timestamp": priciest["timestamp"],
+        },
         "points": points,
     }
 
-
-@app.get("/spotprices")
+@app.get("/api/spotprices")
 def get_spotprices(area: str = "NO1"):
-    """
-    Returnerer dagens spotpriser for valgt område (default NO1).
-    """
     data = fetch_nve_prices(area=area)
     return {"area": area, "data": data}

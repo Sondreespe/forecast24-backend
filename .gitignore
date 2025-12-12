@@ -1,0 +1,20 @@
+# data
+data/
+*.csv
+
+# env / secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# mac
+.DS_Store
+
+# logs
+*.log
