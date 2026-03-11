@@ -36,6 +36,8 @@ app.include_router(spot_router)
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    from .collector_db import collect_all
+    collect_all(days=30)
 
 @app.get("/api/health")
 def health_check():

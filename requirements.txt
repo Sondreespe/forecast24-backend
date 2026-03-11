@@ -4,4 +4,4 @@ requests
 pydantic
 SQLAlchemy==2.0.36
 psycopg[binary]==3.2.3
-python-dotenv
+python-dotenvpsycopg2-binary
