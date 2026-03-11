@@ -7,6 +7,8 @@ from .history_api import router as history_router
 from .db import Base, engine
 from .models import SpotPrice
 from .spot_api import router as spot_router
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 #Check check check
 app = FastAPI(
@@ -34,10 +36,11 @@ app.include_router(history_router, prefix="/api")
 app.include_router(spot_router)
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     Base.metadata.create_all(bind=engine)
-    from .collector_db import collect_all
-    collect_all(days=30)
+    loop = asyncio.get_event_loop()
+    executor = ThreadPoolExecutor(max_workers=1)
+    loop.run_in_executor(executor, lambda: __import__('app.collector_db', fromlist=['collect_all']).collect_all(days=30))
 
 @app.get("/api/health")
 def health_check():
