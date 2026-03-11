@@ -8,6 +8,7 @@ from .db import Base, engine
 from .models import SpotPrice
 from .spot_api import router as spot_router
 
+#Check check check
 app = FastAPI(
     title="Forecast24 API",
     description="Backend-API for Forecast24",
