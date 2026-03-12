@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from typing import Dict, List
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from .nve_fetcher import fetch_nve_prices
 from .history_api import router as history_router
-from .db import Base, engine
+from .db import Base, engine, get_db
 from .models import SpotPrice
 from .spot_api import router as spot_router
+from .baseline import predict_baseline
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
@@ -96,6 +98,51 @@ def get_forecast() -> Dict:
         },
         "points": points,
     }
+
+@app.get("/api/forecast/baseline")
+def get_forecast_baseline(
+    area: str = Query("NO1", description="NO1..NO5"),
+    db: Session = Depends(get_db),
+) -> Dict:
+    area = area.upper().strip()
+    points = predict_baseline(db, area)
+
+    valid = [p for p in points if p["price_nok_per_kwh"] is not None]
+    prices = [p["price_nok_per_kwh"] for p in valid]
+
+    if not prices:
+        return {
+            "status": "no_data",
+            "model": "baseline",
+            "area": area,
+            "points": points,
+            "summary": None,
+        }
+
+    cheapest = min(valid, key=lambda p: p["price_nok_per_kwh"])
+    priciest = max(valid, key=lambda p: p["price_nok_per_kwh"])
+    now = datetime.utcnow()
+
+    return {
+        "status": "ok",
+        "model": "baseline",
+        "area": area,
+        "generated_at": now.isoformat() + "Z",
+        "summary": {
+            "currency": "NOK",
+            "unit": "kr/kWh",
+            "horizon_hours": 24,
+            "min_price": min(prices),
+            "max_price": max(prices),
+            "avg_price": round(sum(prices) / len(prices), 4),
+            "cheapest_hour": cheapest["hour"],
+            "cheapest_timestamp": cheapest["timestamp"],
+            "priciest_hour": priciest["hour"],
+            "priciest_timestamp": priciest["timestamp"],
+        },
+        "points": points,
+    }
+
 
 @app.get("/api/spotprices")
 def get_spotprices(area: str = "NO1"):
