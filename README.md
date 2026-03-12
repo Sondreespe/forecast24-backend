@@ -120,7 +120,7 @@ forecast24-backend/
 
 ## Status
 
-> 🚧 **Under aktiv utvikling**
+>  **Under aktiv utvikling**
 >
 > Forecast-endepunktet bruker foreløpig en regelbasert modell. En ekte ML-basert tidsseriemodell er under planlegging.
 
