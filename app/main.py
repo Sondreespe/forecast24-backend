@@ -8,6 +8,7 @@ from .history_api import router as history_router
 from .db import Base, engine, get_db
 from app.models.xgboost_model import predict_xgboost
 from app.models.baseline import predict_baseline
+from app.models.evaluator import evaluate_model
 from .spot_api import router as spot_router
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -189,3 +190,14 @@ def get_forecast_xgboost(
     }
 
 
+@app.get("/api/evaluate/{model_id}")
+def get_model_evaluation(
+        model_id: str,
+        area: str = Query("NO1", description="NO1..NO5"),
+        db: Session = Depends(get_db),
+) -> Dict:
+    area = area.upper().strip()
+    try:
+        return evaluate_model(db, model_id, area)
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
