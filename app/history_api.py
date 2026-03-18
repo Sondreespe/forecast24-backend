@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from .db import get_db
-from .models import SpotPrice
+from .models_db import SpotPrice
 
 router = APIRouter(tags=["history"])
 

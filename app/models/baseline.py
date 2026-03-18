@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from .models import SpotPrice
+from app.models_db import SpotPrice
 
 
 def predict_baseline(db: Session, area: str) -> list[dict]:
