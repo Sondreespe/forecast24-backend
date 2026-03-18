@@ -1,4 +1,4 @@
-# app/models.py
+# app/models_db.py
 from sqlalchemy import Column, Integer, String, Date, Float, DateTime, UniqueConstraint, Index
 from .db import Base
 

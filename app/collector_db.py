@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from .db import SessionLocal
-from .models import SpotPrice
+from .models_db import SpotPrice
 
 
 AREAS = ["NO1", "NO2", "NO3", "NO4", "NO5"]
