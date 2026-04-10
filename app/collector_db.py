@@ -52,7 +52,7 @@ def normalize_rows(area: str, payload: List[Dict[str, Any]]) -> List[SpotPrice]:
         rows.append(
             SpotPrice(
                 area=area,
-                date=ts.date(),          # ✅ Date, ikke string
+                date=ts.date(),
                 time_start=ts,
                 time_end=te,
                 nok_per_kwh=nok,
@@ -85,11 +85,11 @@ def insert_day(db, area: str, d: date) -> tuple[int, int]:
                 continue
 
             db.add(row)
-            db.flush()      # fanger UNIQUE-brudd her
+            db.flush()      #
             added += 1
 
         except IntegrityError:
-            db.rollback()   # 🔑 helt kritisk
+            db.rollback()
             skipped += 1
 
     return added, skipped
